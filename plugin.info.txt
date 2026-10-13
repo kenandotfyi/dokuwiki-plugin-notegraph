@@ -1,0 +1,6 @@
+base   notegraph
+author Kenan Akinci
+email  hey@kenan.fyi
+date   2026-10-12
+name   NoteGraph
+desc   Explore nearby wiki pages in an interactive graph.
