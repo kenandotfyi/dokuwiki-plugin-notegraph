@@ -148,7 +148,7 @@
 }
 
 .notegraph-arrowhead {
-    fill: #a1a1a1;
+    fill: #656565;
 }
 
 .notegraph-node {
@@ -235,7 +235,7 @@ html[data-theme="dark"] .notegraph-link {
 }
 
 html[data-theme="dark"] .notegraph-arrowhead {
-    fill: #868686;
+    fill: #b7b7b7;
 }
 
 html[data-theme="dark"] .notegraph-node circle {

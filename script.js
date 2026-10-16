@@ -265,8 +265,8 @@
 
         const defs = svgElement('defs');
         const marker = svgElement('marker', {
-            id: 'notegraph-arrow', viewBox: '0 0 10 10', refX: '8', refY: '5',
-            markerWidth: '6', markerHeight: '6', orient: 'auto-start-reverse',
+            id: 'notegraph-arrow', viewBox: '0 0 10 10', refX: '10', refY: '5',
+            markerWidth: '10', markerHeight: '10', markerUnits: 'userSpaceOnUse', orient: 'auto',
         });
         marker.appendChild(svgElement('path', { d: 'M 0 0 L 10 5 L 0 10 z', class: 'notegraph-arrowhead' }));
         defs.appendChild(marker);
@@ -280,10 +280,23 @@
         svg.appendChild(scene);
 
         const directedLinks = new Set(data.links.map((link) => `${link.source}\0${link.target}`));
+        const nodesById = new Map(data.nodes.map((node) => [node.id, node]));
+        const trimPoint = (from, toward, distance) => {
+            const dx = toward.x - from.x;
+            const dy = toward.y - from.y;
+            const length = Math.max(1, Math.hypot(dx, dy));
+            const offset = Math.min(distance, length * 0.4);
+            return { x: from.x + (dx / length) * offset, y: from.y + (dy / length) * offset };
+        };
         data.links.forEach((link) => {
             const source = layout.positions.get(link.source);
             const target = layout.positions.get(link.target);
             if (!source || !target) return;
+            const sourceNode = nodesById.get(link.source);
+            const targetNode = nodesById.get(link.target);
+            if (!sourceNode || !targetNode) return;
+            const sourceRadius = sourceNode.depth === 0 ? 24 : 17;
+            const targetRadius = targetNode.depth === 0 ? 24 : 17;
             const reverse = directedLinks.has(`${link.target}\0${link.source}`);
             let pathData;
             if (reverse) {
@@ -294,9 +307,14 @@
                 const offset = 13 * direction;
                 const midX = (source.x + target.x) / 2 - (dy / distance) * offset;
                 const midY = (source.y + target.y) / 2 + (dx / distance) * offset;
-                pathData = `M${source.x},${source.y} Q${midX},${midY} ${target.x},${target.y}`;
+                const control = { x: midX, y: midY };
+                const start = trimPoint(source, control, sourceRadius + 1);
+                const end = trimPoint(target, control, targetRadius + 2);
+                pathData = `M${start.x},${start.y} Q${midX},${midY} ${end.x},${end.y}`;
             } else {
-                pathData = `M${source.x},${source.y} L${target.x},${target.y}`;
+                const start = trimPoint(source, target, sourceRadius + 1);
+                const end = trimPoint(target, source, targetRadius + 2);
+                pathData = `M${start.x},${start.y} L${end.x},${end.y}`;
             }
             scene.appendChild(svgElement('path', { d: pathData, class: 'notegraph-link', 'marker-end': 'url(#notegraph-arrow)' }));
         });
